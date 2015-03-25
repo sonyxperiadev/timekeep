@@ -34,6 +34,8 @@
 
 #include <sys/time.h>
 
+#define LOG_TAG "TimeKeep"
+
 #include <cutils/properties.h>
 #include <cutils/log.h>
 
