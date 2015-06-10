@@ -38,6 +38,7 @@
 
 #include <cutils/properties.h>
 #include <cutils/log.h>
+#include <errno.h>
 
 #define RTC_SYS_FILE "/sys/class/rtc/rtc0/since_epoch"
 #define TIME_ADJUST_PROP "persist.sys.timeadjust"
