@@ -33,6 +33,7 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include <sys/stat.h>
 #include <sys/time.h>
 
 #define LOG_TAG "TimeKeep"
@@ -42,6 +43,7 @@
 #include <errno.h>
 
 #define RTC_SYS_FILE "/sys/class/rtc/rtc0/since_epoch"
+#define RTC_ATS_FILE "/data/time/ats_2"
 #define TIME_ADJUST_PROP "persist.sys.timeadjust"
 
 int read_epoch(unsigned long* epoch) {
@@ -70,6 +72,24 @@ int read_epoch(unsigned long* epoch) {
 	return res;
 }
 
+void restore_ats(unsigned long value) {
+	FILE *fp = NULL;
+	char mode[] = "0777";
+	int i;
+
+	i = strtol(mode, 0, 8);
+	value *= 1000;
+	fp = fopen(RTC_ATS_FILE, "wb");
+
+	if (fp != NULL) {
+		chmod(RTC_ATS_FILE, i);
+		fwrite(&value, sizeof(value), 1, fp);
+		fclose(fp);
+	} else {
+		ALOGI("Can't restore " RTC_ATS_FILE);
+	}
+}
+
 int store_time() {
 	char prop[PROPERTY_VALUE_MAX];
 	unsigned long seconds = 0;
@@ -90,6 +110,7 @@ int store_time() {
 		} else {
 			seconds -= epoch_since;
 			snprintf(prop, PROPERTY_VALUE_MAX, "%lu", seconds);
+			restore_ats(seconds);
 			property_set(TIME_ADJUST_PROP, prop);
 			ALOGI("Time adjustment stored to property");
 			res = 0;
@@ -127,6 +148,7 @@ int restore_time() {
 		ALOGI("Failed to read from " RTC_SYS_FILE
 		      " (%d), bailing out", res);
 	} else {
+		restore_ats(time_adjust);
 		tv.tv_sec = epoch_since + time_adjust;
 		tv.tv_usec = 0;
 		res = settimeofday(&tv, NULL);
