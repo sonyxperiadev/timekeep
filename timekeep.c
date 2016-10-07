@@ -61,7 +61,7 @@ int read_epoch(unsigned long* epoch) {
 			char *endp = NULL;
 			*epoch = strtoul(buffer, &endp, 10);
 			// sysfs read returns newline, ok to end up at '\n'
-			if (*endp != '\0' && *endp != '\n') {
+			if (*endp != '\0' || *endp != '\n') {
 				ALOGI("Read from " RTC_SYS_FILE " returned "
 				      "invalid string %s (%s)", buffer, endp);
 				res = -1;
