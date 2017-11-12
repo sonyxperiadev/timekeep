@@ -74,15 +74,11 @@ int read_epoch(unsigned long* epoch) {
 
 void restore_ats(unsigned long value) {
 	FILE *fp = NULL;
-	char mode[] = "0777";
-	int i;
 
-	i = strtol(mode, 0, 8);
 	value *= 1000;
 	fp = fopen(RTC_ATS_FILE, "wb");
 
 	if (fp != NULL) {
-		chmod(RTC_ATS_FILE, i);
 		fwrite(&value, sizeof(value), 1, fp);
 		fclose(fp);
 	} else {
