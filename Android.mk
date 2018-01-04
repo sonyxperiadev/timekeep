@@ -7,6 +7,7 @@ LOCAL_SHARED_LIBRARIES := libcutils liblog
 LOCAL_MODULE_TAGS := optional
 ifeq (1,$(filter 1,$(shell echo "$$(( $(PLATFORM_SDK_VERSION) >= 25 ))" )))
 LOCAL_MODULE_OWNER := sony
+LOCAL_INIT_RC_64   := vendor/etc/init/timekeep.rc
 LOCAL_PROPRIETARY_MODULE := true
 endif
 include $(BUILD_EXECUTABLE)
