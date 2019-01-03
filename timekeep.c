@@ -37,7 +37,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#define LOG_TAG "TimeKeep"
+#define LOG_TAG "timekeep"
 
 #include <cutils/properties.h>
 #include <cutils/log.h>
@@ -73,7 +73,7 @@ int read_epoch(unsigned long* epoch) {
 	return res;
 }
 
-void restore_ats(unsigned long value) {
+void write_ats(unsigned long value) {
 	FILE *fp = NULL;
 
 	value *= 1000;
@@ -83,7 +83,7 @@ void restore_ats(unsigned long value) {
 		fwrite(&value, sizeof(value), 1, fp);
 		fclose(fp);
 	} else {
-		ALOGI("Can't restore " RTC_ATS_FILE);
+		ALOGI("Can't write timeadjust to " RTC_ATS_FILE);
 	}
 }
 
@@ -107,7 +107,7 @@ int store_time() {
 		} else {
 			seconds -= epoch_since;
 			snprintf(prop, PROPERTY_VALUE_MAX, "%lu", seconds);
-			restore_ats(seconds);
+			write_ats(seconds);
 			property_set(TIME_ADJUST_PROP, prop);
 			ALOGI("Time adjustment stored to property");
 			res = 0;
@@ -128,6 +128,7 @@ int restore_time() {
 	property_get(TIME_ADJUST_PROP, prop, "0");
 
 	if (strcmp(prop, "0") != 0) {
+		// If persist.sys.timeadjust is set, read it and set time_adjust
 		char *endp = NULL;
 		time_adjust = strtoul(prop, &endp, 10);
 		if (*endp != '\0') {
@@ -145,7 +146,7 @@ int restore_time() {
 		ALOGI("Failed to read from " RTC_SYS_FILE
 		      " (%d), bailing out", res);
 	} else {
-		restore_ats(time_adjust);
+		write_ats(time_adjust);
 		tv.tv_sec = epoch_since + time_adjust;
 		tv.tv_usec = 0;
 		res = settimeofday(&tv, NULL);
