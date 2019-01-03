@@ -1,14 +1,4 @@
-LOCAL_PATH:= $(call my-dir)
-
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES := timekeep.c
-LOCAL_MODULE := timekeep
-LOCAL_SHARED_LIBRARIES := libcutils liblog
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_OWNER := sony
-LOCAL_INIT_RC_64   := vendor/etc/init/timekeep.rc
-LOCAL_PROPRIETARY_MODULE := true
-include $(BUILD_EXECUTABLE)
+LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional

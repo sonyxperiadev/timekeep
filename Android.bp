@@ -1,0 +1,11 @@
+cc_binary {
+    name: "timekeep",
+    init_rc: ["vendor/etc/init/timekeep.rc"],
+    owner: "sony",
+    srcs: ["timekeep.c"],
+    shared_libs: [
+        "libcutils",
+        "liblog",
+    ],
+    vendor: true,
+}
