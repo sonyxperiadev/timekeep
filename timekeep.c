@@ -171,8 +171,6 @@ int main(int argc, char* argv[]) {
 		return res;
 	}
 
-	// Keep CAP_SYS_TIME and drop to system user
-
 	if (strcmp(argv[1], "store") == 0) {
 		res = store_time();
 	}
