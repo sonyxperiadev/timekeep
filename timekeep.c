@@ -29,152 +29,156 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-
-#include <sys/stat.h>
-#include <time.h>
-
 #define LOG_TAG "timekeep"
 
-#include <cutils/properties.h>
-#include <cutils/log.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+
+#include <cutils/properties.h>
+//#include <cutils/log.h>
+#include <log/log.h>
 
 #define RTC_SYS_FILE "/sys/class/rtc/rtc0/since_epoch"
 #define RTC_ATS_FILE "/data/vendor/time/ats_2"
 #define TIME_ADJUST_PROP "persist.sys.timeadjust"
 
-int read_epoch(unsigned long* epoch) {
-	int res = 0;
+int read_epoch(unsigned long *epoch) {
+    int res = 0;
 
-	int fd = open(RTC_SYS_FILE, O_RDONLY);
-	if (fd == -1) {
-		res = -errno;
-		ALOGD("Failed to open RTC sys path");
-	} else {
-		char buffer[16];
-		memset(buffer, 0, 16);
-		res = read(fd, buffer, 16);
-		if (res > 0) {
-			char *endp = NULL;
-			*epoch = strtoul(buffer, &endp, 10);
-			// sysfs read returns newline, ok to end up at '\n'
-			if (*endp != '\0' && *endp != '\n') {
-				ALOGI("Read from " RTC_SYS_FILE " returned "
-				      "invalid string %s (%s)", buffer, endp);
-				res = -1;
-			}
-		}
-	}
+    int fd = open(RTC_SYS_FILE, O_RDONLY);
+    if (fd == -1) {
+        res = -errno;
+        ALOGD("Failed to open RTC sys path");
+    } else {
+        char buffer[16];
+        memset(buffer, 0, 16);
+        res = read(fd, buffer, 16);
+        if (res > 0) {
+            char *endp = NULL;
+            *epoch = strtoul(buffer, &endp, 10);
+            // sysfs read returns newline, ok to end up at '\n'
+            if (*endp != '\0' && *endp != '\n') {
+                ALOGI("Read from " RTC_SYS_FILE
+                      " returned "
+                      "invalid string %s (%s)",
+                      buffer, endp);
+                res = -1;
+            }
+        }
+    }
 
-	return res;
+    return res;
 }
 
 void write_ats(unsigned long value) {
-	FILE *fp = NULL;
+    FILE *fp = NULL;
 
-	value *= 1000;
-	fp = fopen(RTC_ATS_FILE, "wb");
+    value *= 1000;
+    fp = fopen(RTC_ATS_FILE, "wb");
 
-	if (fp != NULL) {
-		fwrite(&value, sizeof(value), 1, fp);
-		fclose(fp);
-	} else {
-		ALOGI("Can't write timeadjust to " RTC_ATS_FILE);
-	}
+    if (fp != NULL) {
+        fwrite(&value, sizeof(value), 1, fp);
+        fclose(fp);
+    } else {
+        ALOGI("Can't write timeadjust to " RTC_ATS_FILE);
+    }
 }
 
 int store_time() {
-	char prop[PROPERTY_VALUE_MAX];
-	unsigned long seconds = 0;
-	unsigned long epoch_since = 0;
-	int res = -1;
-	struct tm tm;
-	time_t t;
+    char prop[PROPERTY_VALUE_MAX];
+    unsigned long seconds = 0;
+    unsigned long epoch_since = 0;
+    int res = -1;
+    struct tm tm;
+    time_t t;
 
-	// Get time and adjust for local time
-	time(&t);
-	localtime_r(&t, &tm);
-	seconds = mktime(&tm);
+    // Get time and adjust for local time
+    time(&t);
+    localtime_r(&t, &tm);
+    seconds = mktime(&tm);
 
-	if (seconds > 0) {
-		res = read_epoch(&epoch_since);
-		if (res < 0) {
-			ALOGI("Failed to read epoch while storing");
-		} else {
-			seconds -= epoch_since;
-			snprintf(prop, PROPERTY_VALUE_MAX, "%lu", seconds);
-			write_ats(seconds);
-			property_set(TIME_ADJUST_PROP, prop);
-			ALOGI("Time adjustment stored to property");
-			res = 0;
-		}
-	}
+    if (seconds > 0) {
+        res = read_epoch(&epoch_since);
+        if (res < 0) {
+            ALOGI("Failed to read epoch while storing");
+        } else {
+            seconds -= epoch_since;
+            snprintf(prop, PROPERTY_VALUE_MAX, "%lu", seconds);
+            write_ats(seconds);
+            property_set(TIME_ADJUST_PROP, prop);
+            ALOGI("Time adjustment stored to property");
+            res = 0;
+        }
+    }
 
-	return res;
+    return res;
 }
-
 
 int restore_time() {
-	struct timeval tv;
-	unsigned long time_adjust = 0;
-	unsigned long epoch_since = 0;
-	int res = -1;
-	char prop[PROPERTY_VALUE_MAX];
-	memset(prop, 0x0, PROPERTY_VALUE_MAX);
-	property_get(TIME_ADJUST_PROP, prop, "0");
+    struct timeval tv;
+    unsigned long time_adjust = 0;
+    unsigned long epoch_since = 0;
+    int res = -1;
+    char prop[PROPERTY_VALUE_MAX];
+    memset(prop, 0x0, PROPERTY_VALUE_MAX);
+    property_get(TIME_ADJUST_PROP, prop, "0");
 
-	if (strcmp(prop, "0") != 0) {
-		// If persist.sys.timeadjust is set, read it and set time_adjust
-		char *endp = NULL;
-		time_adjust = strtoul(prop, &endp, 10);
-		if (*endp != '\0') {
-			ALOGI("Property in " TIME_ADJUST_PROP
-			      " is not valid: %s (%d)", prop, errno);
-			return res;
-		}
-	} else {
-		ALOGI("No time adjust value found for restore");
-		return res;
-	}
+    if (strcmp(prop, "0") != 0) {
+        // If persist.sys.timeadjust is set, read it and set time_adjust
+        char *endp = NULL;
+        time_adjust = strtoul(prop, &endp, 10);
+        if (*endp != '\0') {
+            ALOGI("Property in " TIME_ADJUST_PROP
+                  " is not valid: %s (%d)",
+                  prop, errno);
+            return res;
+        }
+    } else {
+        ALOGI("No time adjust value found for restore");
+        return res;
+    }
 
-	res = read_epoch(&epoch_since);
-	if (res < 0) {
-		ALOGI("Failed to read from " RTC_SYS_FILE
-		      " (%d), bailing out", res);
-	} else {
-		write_ats(time_adjust);
-		tv.tv_sec = epoch_since + time_adjust;
-		tv.tv_usec = 0;
-		res = settimeofday(&tv, NULL);
-		if (res != 0) {
-			ALOGI("Failed to restore time (%d), root?",
-			      res);
-		} else {
-			ALOGI("Time restored!");
-		}
-	}
+    res = read_epoch(&epoch_since);
+    if (res < 0) {
+        ALOGI("Failed to read from " RTC_SYS_FILE
+              " (%d), bailing out",
+              res);
+    } else {
+        write_ats(time_adjust);
+        tv.tv_sec = epoch_since + time_adjust;
+        tv.tv_usec = 0;
+        res = settimeofday(&tv, NULL);
+        if (res != 0) {
+            ALOGI("Failed to restore time (%d), root?",
+                  res);
+        } else {
+            ALOGI("Time restored!");
+        }
+    }
 
-	return res;
+    return res;
 }
 
-int main(int argc, char* argv[]) {
-	int res = -1;
-	if (argc != 2) {
-		ALOGI("usage: timekeep store|restore");
-		return res;
-	}
+int main(int argc, char *argv[]) {
+    int res = -1;
+    if (argc != 2) {
+        ALOGI("usage: timekeep store|restore");
+        return res;
+    }
 
-	if (strcmp(argv[1], "store") == 0) {
-		res = store_time();
-	}
+    if (strcmp(argv[1], "store") == 0) {
+        res = store_time();
+    }
 
-	if (strcmp(argv[1], "restore") == 0) {
-		res = restore_time();
-	}
+    if (strcmp(argv[1], "restore") == 0) {
+        res = restore_time();
+    }
 
-	return res;
+    return res;
 }
