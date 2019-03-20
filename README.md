@@ -9,7 +9,7 @@ ACTION_TIME_CHANGED, ACTION_TIMEZONE_CHANGED and ACTION_SHUTDOWN and then calls 
 
 When the Java broadcastreceiver gets one of the above intents, timekeep is called with
 store parameter and the time delta between the set date (in seconds) and 
-/sys/class/rtc/rtc0/since_epoch is stored to a persistent property (persist.sys.timeadjust).
+/sys/class/rtc/rtc0/since_epoch is stored to a persistent property (persist.vendor.timeadjust).
 
 To restore the time timekeep is called with the restore parameter. The persistent property
 containing the time delta is then read together with the since_epoch value and settimeofday
