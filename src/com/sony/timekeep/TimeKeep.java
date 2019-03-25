@@ -50,7 +50,7 @@ import android.os.SystemProperties;
 
 public class TimeKeep extends BroadcastReceiver {
 	private static final String TAG = "TimeKeep-Receiver";
-	private static final String TIMEADJ_PROP = "persist.sys.timeadjust";
+	private static final String TIMEADJ_PROP = "persist.vendor.timeadjust";
 	private static final String RTC_SINCE_EPOCH = "/sys/class/rtc/rtc0/since_epoch";
 	private static final String RTC_ATS_FILE = android.os.Build.VERSION.SDK_INT >= 26 ?
 		"/data/vendor/time/ats_2" : "/data/time/ats_2";

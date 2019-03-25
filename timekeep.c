@@ -49,7 +49,7 @@
 #else
 #define RTC_ATS_FILE "/data/time/ats_2"
 #endif
-#define TIME_ADJUST_PROP "persist.sys.timeadjust"
+#define TIME_ADJUST_PROP "persist.vendor.timeadjust"
 
 int read_epoch(unsigned long* epoch) {
 	int res = 0;
