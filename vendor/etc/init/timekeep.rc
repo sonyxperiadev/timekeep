@@ -8,7 +8,8 @@ on boot
 # Time service
 service timekeep /vendor/bin/timekeep restore
     class late_start
-    user root
-    group root system
+    user system
+    group system
+    capabilities SYS_TIME
     oneshot
     writepid /dev/cpuset/system-background/tasks
