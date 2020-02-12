@@ -40,7 +40,11 @@
 #define LOG_TAG "TimeKeep"
 
 #include <cutils/properties.h>
+#if ANDROID_SDK_VERSION >= 26
+#include <log/log.h>
+#else
 #include <cutils/log.h>
+#endif
 #include <errno.h>
 
 #define RTC_SYS_FILE "/sys/class/rtc/rtc0/since_epoch"
