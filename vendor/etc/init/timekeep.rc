@@ -5,6 +5,9 @@ on boot
     chmod 0770 /data/time/ats_2
     chmod 0770 /data/vendor/time/ats_2
 
+    # Set system as owner of RTC node
+    chown system system /sys/class/rtc/rtc0/since_epoch
+
 # Time service
 service timekeep /vendor/bin/timekeep restore
     class late_start
