@@ -29,10 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <time.h>
@@ -40,7 +41,11 @@
 #define LOG_TAG "TimeKeep"
 
 #include <cutils/properties.h>
+#if ANDROID_SDK_VERSION >= 26
+#include <log/log.h>
+#else
 #include <cutils/log.h>
+#endif
 #include <errno.h>
 
 #define RTC_SYS_FILE "/sys/class/rtc/rtc0/since_epoch"
@@ -51,7 +56,7 @@
 #endif
 #define TIME_ADJUST_PROP "persist.vendor.timeadjust"
 
-int read_epoch(unsigned long* epoch) {
+int read_epoch(unsigned long long* epoch) {
 	int res = 0;
 
 	int fd = open(RTC_SYS_FILE, O_RDONLY);
@@ -64,7 +69,7 @@ int read_epoch(unsigned long* epoch) {
 		res = read(fd, buffer, 16);
 		if (res > 0) {
 			char *endp = NULL;
-			*epoch = strtoul(buffer, &endp, 10);
+			*epoch = strtoull(buffer, &endp, 10);
 			// sysfs read returns newline, ok to end up at '\n'
 			if (*endp != '\0' && *endp != '\n') {
 				ALOGI("Read from " RTC_SYS_FILE " returned "
@@ -77,7 +82,8 @@ int read_epoch(unsigned long* epoch) {
 	return res;
 }
 
-void restore_ats(unsigned long value) {
+/* ats_2 contains the time offset as 8-byte binary representation */
+void restore_ats(uint64_t value) {
 	FILE *fp = NULL;
 
 	value *= 1000;
@@ -93,8 +99,8 @@ void restore_ats(unsigned long value) {
 
 int store_time() {
 	char prop[PROPERTY_VALUE_MAX];
-	unsigned long seconds = 0;
-	unsigned long epoch_since = 0;
+	unsigned long long seconds = 0;
+	unsigned long long epoch_since = 0;
 	int res = -1;
 	struct tm tm;
 	time_t t;
@@ -110,7 +116,7 @@ int store_time() {
 			ALOGI("Failed to read epoch while storing");
 		} else {
 			seconds -= epoch_since;
-			snprintf(prop, PROPERTY_VALUE_MAX, "%lu", seconds);
+			snprintf(prop, PROPERTY_VALUE_MAX, "%llu", seconds);
 			restore_ats(seconds);
 			property_set(TIME_ADJUST_PROP, prop);
 			ALOGI("Time adjustment stored to property");
@@ -124,8 +130,8 @@ int store_time() {
 
 int restore_time() {
 	struct timeval tv;
-	unsigned long time_adjust = 0;
-	unsigned long epoch_since = 0;
+	unsigned long long time_adjust = 0;
+	unsigned long long epoch_since = 0;
 	int res = -1;
 	char prop[PROPERTY_VALUE_MAX];
 	memset(prop, 0x0, PROPERTY_VALUE_MAX);
@@ -133,7 +139,7 @@ int restore_time() {
 
 	if (strcmp(prop, "0") != 0) {
 		char *endp = NULL;
-		time_adjust = strtoul(prop, &endp, 10);
+		time_adjust = strtoull(prop, &endp, 10);
 		if (*endp != '\0') {
 			ALOGI("Property in " TIME_ADJUST_PROP
 			      " is not valid: %s (%d)", prop, errno);
