@@ -23,7 +23,4 @@ LOCAL_CERTIFICATE := platform
 LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_PRIVILEGED_MODULE := true
 LOCAL_PROGUARD_ENABLED := disabled
-ifneq ($(call math_gt_or_eq, $(PLATFORM_SDK_VERSION), 28),)
-LOCAL_PROPRIETARY_MODULE := true
-endif
 include $(BUILD_PACKAGE)
