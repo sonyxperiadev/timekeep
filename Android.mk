@@ -19,8 +19,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := TimeKeep
+LOCAL_STATIC_JAVA_LIBRARIES := SonyTimekeepProperties
 LOCAL_CERTIFICATE := platform
-LOCAL_PRIVATE_PLATFORM_APIS := true
+LOCAL_SDK_VERSION := current
 LOCAL_PRIVILEGED_MODULE := true
 LOCAL_PROGUARD_ENABLED := disabled
 ifneq ($(call math_gt_or_eq, $(PLATFORM_SDK_VERSION), 28),)

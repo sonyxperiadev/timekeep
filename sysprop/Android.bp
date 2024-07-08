@@ -1,0 +1,8 @@
+sysprop_library {
+    name: "SonyTimekeepProperties",
+    proprietary: true,
+
+    srcs: ["SonyTimekeepProperties.sysprop"],
+
+    property_owner: "Vendor",
+}
