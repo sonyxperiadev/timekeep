@@ -1,0 +1,10 @@
+module: "com.sony.timekeep.SonyTimekeepProperties"
+owner: Vendor
+
+prop {
+    api_name: "timeadjust"
+    type: String
+    scope: Internal
+    access: ReadWrite
+    prop_name: "persist.vendor.timeadjust"
+}
