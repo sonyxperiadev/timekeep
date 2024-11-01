@@ -14,4 +14,4 @@ service timekeep /vendor/bin/timekeep restore
     group system
     capabilities SYS_TIME
     oneshot
-    writepid /dev/cpuset/system-background/tasks
+    task_profiles ServiceCapacityLow
