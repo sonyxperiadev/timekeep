@@ -1,0 +1,21 @@
+cc_binary {
+    name: "timekeep",
+    owner: "sony",
+    proprietary: true,
+    srcs: ["timekeep.c"],
+    init_rc: ["vendor/etc/init/timekeep.rc"],
+    shared_libs: [
+        "libcutils",
+        "liblog",
+    ],
+}
+
+android_app {
+    name: "TimeKeep",
+    sdk_version: "current",
+    proprietary: true,
+    certificate: "platform",
+    required: ["timekeep"],
+    srcs: ["src/**/*.java"],
+    static_libs: ["SonyTimekeepProperties"],
+}
